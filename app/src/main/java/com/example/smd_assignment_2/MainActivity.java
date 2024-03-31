@@ -1,10 +1,12 @@
 package com.example.smd_assignment_2;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SearchView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
     public static RestrauntListAdapter rvAdapter;
     public static ArrayList<Restraunt> restrauntArrayList;
     private static final int Req_Code = 1;
+    SharedPreferences spref;
+    SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,21 +77,41 @@ public class MainActivity extends AppCompatActivity {
         rvRestraunts = findViewById(R.id.rvRestrauntsList);
 
         rvRestraunts.setHasFixedSize(true);
-
-        restrauntArrayList = new ArrayList<>();
-        restrauntArrayList.add(new Restraunt("Burger King", "Islamabad", "123", "Best", 4.6));
-        restrauntArrayList.add(new Restraunt("Dagwood", "Lahore", "234", "Noice", 4.1));
-        restrauntArrayList.add(new Restraunt("Cheezious", "PIA Road", "345", "Great", 3.4));
-        restrauntArrayList.add(new Restraunt("KFC", "Mall Road", "456", "Bad", 1.2));
-        restrauntArrayList.add(new Restraunt("Subway", "Islamabad", "567", "Not good", 2.6));
-        restrauntArrayList.add(new Restraunt("Broadway", "Defence Road", "678", "Just ok", 3.1));
-
         manager = new LinearLayoutManager(this);
         rvRestraunts.setLayoutManager(manager);
+
+        spref = getSharedPreferences("spref", MODE_PRIVATE);
+        editor = spref.edit();
+        populateSharedPreference();
+
+        restrauntArrayList = getRestaurantListFromSharedPreferences();
+
         rvAdapter = new RestrauntListAdapter(this, restrauntArrayList);
         rvRestraunts.setAdapter(rvAdapter);
+    }
 
-        //rvAdapter.notifyDataSetChanged();
+    private void populateSharedPreference(){
+
+        String temp = spref.getString("restraunt_list", null);
+        if (temp != null)
+            return;
+
+        SharedPreferences.Editor editor = spref.edit();
+        String[] restaurantData = {
+                "Burger King,Islamabad,123,Best,4,6",
+                "Dagwood,Lahore,234,Noice,4.1",
+                "Cheezious,PIA Road,345,Great,3.4",
+                "KFC,Mall Road,456,Bad,1.2",
+                "Subway,Islamabad,567,Not Good,2.6",
+                "Broadway,Defence Road,678,Just ok,3.1\n",
+
+        };
+
+        String restaurantsString = String.join("\n", restaurantData);
+
+        editor.putString("restraunt_list", restaurantsString);
+
+        editor.apply();
 
     }
 
@@ -98,8 +122,29 @@ public class MainActivity extends AppCompatActivity {
         {
             if(resultCode == RESULT_OK){
                 rvAdapter.notifyDataSetChanged();
+
             }
         }
+    }
+
+    private ArrayList<Restraunt> getRestaurantListFromSharedPreferences() {
+
+        ArrayList<Restraunt> restaurantList = new ArrayList<>();
+
+        String restaurantsString = spref.getString("restraunt_list", null);
+
+        if (restaurantsString != null) {
+            String[] allRes = restaurantsString.split("\n");
+
+            for (String res : allRes) {
+                String[] split = res.split(",");
+                if (split.length == 5) {
+                    restaurantList.add(new Restraunt(split[0], split[1],
+                            split[2], split[3], Double.parseDouble(split[4])));
+                }
+            }
+        }
+        return restaurantList;
     }
 
     private void filter(String text) {
