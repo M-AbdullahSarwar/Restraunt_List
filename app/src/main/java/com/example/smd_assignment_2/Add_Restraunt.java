@@ -1,6 +1,7 @@
 package com.example.smd_assignment_2;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -18,6 +19,8 @@ public class Add_Restraunt extends AppCompatActivity {
 
     EditText etName, etLocation, etPhoneNo, etDesc, etRatings;
     Button btnAdd;
+
+    SharedPreferences spref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,13 +53,23 @@ public class Add_Restraunt extends AppCompatActivity {
                 }
 
                 double rating = Double.parseDouble(rate);
-                Toast.makeText(Add_Restraunt.this, "Added!", Toast.LENGTH_SHORT).show();
 
                 Restraunt newRestraunt = new Restraunt(name, loc, phone, desc, rating);
                 MainActivity.restrauntArrayList.add(newRestraunt);
-                Log.d("Add_Restaurant", "New restaurant added: " + newRestraunt.toString());
+
+                //Log.d("Add_Restaurant", "New restaurant added: " + newRestraunt.toString());
+
+                String newRestaurant = name + "," + loc + "," + phone + "," + desc + "," + rating + "\n";
+                String restaurant = spref.getString("restraunt_list", null);
+                restaurant += newRestaurant;
+
+                SharedPreferences.Editor editor = spref.edit();
+                editor.putString("restraunt_list",restaurant);
+                editor.apply();
 
                 MainActivity.rvAdapter.notifyDataSetChanged();
+
+                Toast.makeText(Add_Restraunt.this, "Added!", Toast.LENGTH_SHORT).show();
 
                 Intent intent = new Intent();
                 setResult(RESULT_OK, intent);
@@ -74,6 +87,8 @@ public class Add_Restraunt extends AppCompatActivity {
         etDesc = findViewById(R.id.etDiscription);
         etRatings = findViewById(R.id.etRatings);
         btnAdd = findViewById(R.id.btnAdd);
+
+        spref = getSharedPreferences("spref", MODE_PRIVATE);
 
     }
     private void clear(){
